@@ -238,3 +238,7 @@ else:
             'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
     }
+
+# Configuración para Railway (HTTPS detrás de proxy)
+# Permite que Django detecte HTTPS cuando está detrás de un proxy como Railway
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
