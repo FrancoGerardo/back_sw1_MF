@@ -1,0 +1,137 @@
+Informe de Desarrollo - Proyecto Backend
+
+### Configuración Inicial del Proyecto
+
+*   **Proyecto Django (`backend`)**: Se creó la estructura base del proyecto.
+*   **Base de Datos PostgreSQL**: Se configuró el proyecto para conectarse a una base de datos PostgreSQL, gestionando las credenciales de forma segura.
+*   **Variables de Entorno (`.env`)**: Se implementó `python-dotenv` para separar la configuración sensible (claves, contraseñas, hosts) del código fuente, facilitando el despliegue a producción.
+*   **App de API (`api`)**: Se creó una app específica para alojar toda la lógica de la API.
+
+### Fase 1: Gestión de Autenticación (UC-01, UC-02)
+
+*   **Instalación de Librerías**: Se añadieron `djangorestframework`, `dj-rest-auth` y `django-allauth` para gestionar la API y la autenticación de usuarios de forma robusta.
+*   **Endpoints de Autenticación**: Se configuraron las URLs para exponer automáticamente los endpoints de registro (`/api/auth/register/`) e inicio de sesión (`/api/auth/login/`).
+*   **Autenticación por Token**: Se estableció el sistema de autenticación por tokens, donde un usuario recibe una clave (token) al iniciar sesión para autenticar peticiones futuras.
+*   **Nuevos Módulos en Admin**: La instalación de `django-allauth` añadió los módulos "Sites" (para gestionar dominios) y "Social Accounts" (preparación para login con redes sociales) al panel de administración de Django.
+
+### Fase 2: Gestión de Sesión y Perfil (UC-03, UC-06)
+
+*   **Endpoint de Cierre de Sesión**: Se habilitó el endpoint `/api/auth/logout/` que invalida el token del usuario, requiriendo autenticación previa.
+*   **Endpoint de Datos de Usuario**: Se habilitó el endpoint `/api/auth/user/` que permite a un usuario autenticado ver (`GET`) y actualizar (`PUT`/`PATCH`) su información básica (nombre, apellido, etc.).
+
+### Fase 3: Funcionalidades Avanzadas de Cuenta (UC-04, UC-05)
+
+*   **Verificación de Correo Obligatoria**: Se configuró `django-allauth` para que la verificación de correo sea un paso mandatorio (`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'`) antes de poder iniciar sesión.
+*   **Flujo de Recuperación de Contraseña**: Se implementó el flujo completo para que un usuario pueda solicitar un reseteo de contraseña a través de su correo electrónico.
+*   **Solución a Verificación por GET**: Se creó una vista personalizada (`CustomVerifyEmailView`) para solucionar un problema de compatibilidad entre `django-allauth` y `dj-rest-auth`, permitiendo que la verificación de correo se realice con una simple petición `GET` a la URL enviada por correo, lo cual es ideal para una API.
+
+### Fase 4: Perfil de Usuario Personalizado (UC-07, UC-08)
+
+*   **Modelo `Profile`**: Se creó un modelo `Profile` para extender el modelo `User` de Django, añadiendo campos para `language_preference` y `subscription_plan`.
+*   **Creación Automática de Perfil**: Se implementó una señal de Django (`post_save`) que crea automáticamente un objeto `Profile` cada vez que se registra un nuevo `User`, asegurando la consistencia de los datos.
+*   **Serializer y Vista de Perfil**: Se desarrollaron `ProfileSerializer` y `ProfileDetailView` utilizando las vistas genéricas de DRF (`RetrieveUpdateAPIView`) para exponer un endpoint seguro (`/api/profile/`).
+*   **Endpoint de Perfil**: El nuevo endpoint permite a los usuarios autenticados ver y modificar sus preferencias de idioma y plan de suscripción. El código se hizo robusto utilizando `get_or_create` para evitar fallos si un perfil no existiera previamente.
+
+### Fase 5: Gestión de Documentos - Base (UC-09, UC-10, UC-11, UC-13)
+
+*   **Configuración de Media Files**: Se configuró el proyecto para manejar la subida de archivos (`MEDIA_ROOT` y `MEDIA_URL`), permitiendo que Django los almacene y sirva durante el desarrollo.
+*   **Modelos `Folder` y `Document`**: Se crearon los modelos para representar carpetas y documentos, estableciendo relaciones con el usuario (`owner`) y entre ellos (documentos dentro de carpetas, subcarpetas). Se implementó una función `user_directory_path` para organizar los archivos subidos en directorios por usuario.
+*   **Serializers y ViewSets**: Se implementaron `FolderSerializer` y `DocumentSerializer`, junto con `FolderViewSet` y `DocumentViewSet`, utilizando `ModelViewSet` de DRF para generar rápidamente los endpoints CRUD (Crear, Leer, Actualizar, Borrar).
+*   **Seguridad a Nivel de QuerySet**: Se aseguró que los usuarios solo puedan ver y gestionar sus propias carpetas y documentos sobrescribiendo el método `get_queryset` en los ViewSets.
+*   **Acción de Descarga**: Se añadió una acción personalizada (`@action`) al `DocumentViewSet` para crear el endpoint `/api/documents/{id}/download/`, que permite la descarga directa del archivo físico.
+*   **Enrutamiento Automático**: Se utilizó `DefaultRouter` de DRF para registrar los nuevos ViewSets, generando automáticamente un conjunto completo de URLs para la gestión de documentos y carpetas.
+
+### Fase 6: Gestión de Documentos - Metadatos y Búsqueda (UC-14, UC-15)
+
+*   **Instalación y Configuración de `django-filter`**: Se integró la librería para habilitar capacidades de filtrado avanzadas en la API.
+*   **Modelo y API de Etiquetas (`Tag`)**: Se creó un modelo `Tag` con una relación `ManyToManyField` hacia `Document`. Se implementó un `TagViewSet` para que los usuarios puedan gestionar sus propias etiquetas (CRUD).
+*   **Asignación de Etiquetas**: Se actualizó el `DocumentSerializer` para permitir la asignación de etiquetas a los documentos a través de una petición `PATCH`.
+*   **Funcionalidad de Búsqueda**: Se configuró el `SearchFilter` de DRF en el `DocumentViewSet`. Se definieron los campos de búsqueda (`search_fields`) para permitir buscar documentos por nombre de archivo y por el nombre de las etiquetas asociadas.
+*   **Funcionalidad de Filtrado**: Gracias a la configuración global de `django-filter`, se habilitó el filtrado por ID de etiqueta (ej: `?tags=1`).
+
+### Fase 7: Compartir Documentos y Control de Acceso (UC-16)
+
+*   **Modelo de Permisos (`DocumentPermission`)**: Se creó un modelo para almacenar los permisos que un usuario (propietario) otorga a otro sobre un documento específico, con niveles de acceso ('ver', 'editar').
+*   **Lógica de Permisos Personalizada (`IsOwnerOrHasPermission`)**: Se implementó una clase de permiso personalizada en DRF. Esta regla verifica si el usuario que realiza la petición es el propietario del documento o si tiene un permiso explícito registrado en el modelo `DocumentPermission`.
+*   **Listado de Documentos Compartidos**: Se modificó el método `get_queryset` del `DocumentViewSet` para que la lista de documentos de un usuario incluya tanto los propios como aquellos que otros usuarios le han compartido. Se utilizaron objetos `Q` de Django para una consulta eficiente.
+*   **Endpoint para Compartir (`/share`)**: Se añadió una acción personalizada (`@action`) al `DocumentViewSet` para crear el endpoint `/api/documents/{id}/share/`. Este endpoint permite al propietario de un documento otorgar permisos a otros usuarios mediante una petición `POST`.
+*   **Mejoras en el Panel de Administración**: Se personalizó el archivo `api/admin.py` para hacer visibles todos los modelos de la aplicación (`Profile`, `Folder`, `Document`, `Tag`, `DocumentPermission`) en el panel de admin de Django. Además, se modificó la vista del modelo `User` para mostrar el `id` de cada usuario, facilitando las pruebas.
+
+
+
+
+ 4. Funcionalidades de Traducción ● UC-17: Traducir documento completo ● UC-18: Seleccionar idiomas de origen y destino ● UC-19: Traducir fragmento de texto ● UC-20: Ver historial de traducciones ● UC-21: Gestionar preferencias de traducción (API preferida)
+
+Aquí te presento el enfoque teórico para desarrollar cada una de las funcionalidades que mencionas.
+
+Fase 4: Funcionalidades de Traducción (Teoría)
+El núcleo de esta fase es la integración con un servicio de traducción externo. El backend actuará como un intermediario que recibe el contenido del usuario, lo envía a una API de traducción (como Google Translate, DeepL, Microsoft Translator, etc.) y luego gestiona la respuesta.
+
+UC-17: Traducir Documento Completo y UC-18: Seleccionar Idiomas
+Estos dos casos de uso están intrínsecamente ligados.
+
+Extracción de Texto: El primer desafío es obtener el texto plano del archivo que el usuario quiere traducir. El backend no puede simplemente "enviar el archivo". Necesitará librerías capaces de leer diferentes formatos:
+
+Para archivos .txt: Lectura directa.
+Para archivos .pdf: Se necesitaría una librería como PyPDF2 o pdfplumber.
+Para archivos .docx: Se usaría una librería como python-docx.
+El sistema debe ser capaz de identificar el tipo de archivo y usar el extractor adecuado.
+Endpoint de Traducción: Se crearía un nuevo endpoint asociado a un documento, por ejemplo, una acción POST /api/documents/{id}/translate/.
+
+Proceso de la Petición:
+
+El usuario envía la petición a este endpoint. El cuerpo de la petición incluiría los idiomas de origen y destino (UC-18), por ejemplo: { "source_lang": "en", "target_lang": "es" }. El idioma de origen podría ser opcional si la API externa soporta la autodetección.
+El backend recibe la petición, localiza el documento con el {id}.
+Usa la librería de extracción correspondiente para obtener todo el texto del archivo.
+Envía el texto extraído, junto con los idiomas de origen y destino, a la API de traducción externa.
+La API externa devuelve el texto traducido.
+Gestión del Resultado: ¿Qué hacer con el texto traducido? Hay dos opciones principales:
+
+Opción A (Recomendada): Crear un nuevo documento en el sistema. El texto traducido se guardaría en un nuevo archivo (ej. nombre_original_traducido.txt) y se crearía un nuevo registro en el modelo Document. Este nuevo documento podría estar vinculado al original para mantener una relación.
+Opción B: Simplemente devolver el texto traducido en la respuesta de la API sin guardarlo. Esto es más simple pero menos útil para el usuario a largo plazo.
+UC-19: Traducir Fragmento de Texto
+Esta funcionalidad es más directa y no depende de un archivo existente.
+
+Endpoint de Fragmento: Se crearía un endpoint genérico, no ligado a un documento específico, como POST /api/translate/snippet/.
+
+
+
+Proceso de la Petición:
+
+El cuerpo de la petición contendría el texto a traducir y los idiomas, por ejemplo: { "text": "Hello, world!", "source_lang": "en", "target_lang": "fr" }.
+El backend tomaría estos datos y los pasaría directamente a la API de traducción externa.
+La respuesta de la API externa (el texto traducido) se devolvería inmediatamente al usuario en la respuesta JSON.
+UC-20: Ver Historial de Traducciones
+Para implementar esto, es fundamental registrar cada operación de traducción.
+
+Nuevo Modelo TranslationHistory: Se necesitaría un nuevo modelo en la base de datos para almacenar un registro de cada traducción. Este modelo debería contener:
+
+user: Clave foránea al usuario que realizó la traducción.
+original_content: Un campo de texto para guardar el texto original (o un fragmento si es muy largo).
+translated_content: Un campo de texto para el resultado.
+source_language y target_language: Para saber qué idiomas se usaron.
+timestamp: Para saber cuándo se hizo.
+source_document: Una clave foránea opcional al modelo Document si la traducción fue de un archivo completo.
+translation_service: Un campo para registrar qué API se usó (relevante para UC-21).
+Lógica de Registro: En las vistas que manejan UC-17 y UC-19, después de recibir una respuesta exitosa de la API de traducción, se crearía una nueva entrada en este modelo TranslationHistory.
+
+Endpoint de Historial: Se crearía un nuevo ViewSet para este modelo, exponiendo un endpoint de solo lectura como GET /api/history/translations/. Este endpoint devolvería la lista de traducciones realizadas por el usuario autenticado.
+
+UC-21: Gestionar Preferencias de Traducción
+Esta funcionalidad permite al usuario elegir qué motor de traducción prefiere, asumiendo que el sistema está integrado con más de uno.
+
+Extender el Modelo Profile: Se añadiría un nuevo campo al modelo Profile existente, por ejemplo:
+
+preferred_translation_api: Un campo de tipo CharField con opciones predefinidas (ej. 'google', 'deepl', 'microsoft').
+Actualizar la Vista de Perfil: El ProfileSerializer y ProfileDetailView que ya existen (/api/profile/) se actualizarían para permitir al usuario ver y modificar esta nueva preferencia.
+
+Lógica de Selección de API:
+
+En el backend, se crearía una capa de abstracción (por ejemplo, una clase o función "manager de traducción").
+Cuando se va a realizar una traducción (para UC-17 o UC-19), este manager consultaría primero el perfil del usuario para ver su preferred_translation_api.
+Basado en esa preferencia, el manager dirigiría la petición a la implementación correcta (al cliente de la API de Google, al de DeepL, etc.). Si el usuario no tiene una preferencia, se usaría una API por defecto definida en la configuración del proyecto.
+Con esta planificación teórica, tienes una hoja de ruta clara para construir un sistema de traducción robusto y completo.
+
+********
+instalar para traducciones: pip install googletrans==4.0.0-rc1
+********

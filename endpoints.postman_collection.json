@@ -1,0 +1,1124 @@
+{
+    "info": {
+        "_postman_id": "a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6",
+        "name": "Proyecto Backend SW1",
+        "description": "Colección de Postman para probar los endpoints del proyecto de backend.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Autenticación",
+            "item": [
+                {
+                    "name": "UC-01: Registro de nuevo usuario",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"testuser1\",\n    \"email\": \"testuser1@example.com\",\n    \"password\": \"P@ssword123\",\n    \"password2\": \"P@ssword123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                ""
+                            ]
+                        },
+                        "description": "Crea una nueva cuenta de usuario. Después de esto, debes verificar el correo."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-05: Reenviar correo de verificación",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"testuser1@example.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/resend-email/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "resend-email",
+                                ""
+                            ]
+                        },
+                        "description": "Reenvía el correo de verificación si el usuario no lo recibió o expiró."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-02: Inicio de sesión",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// Extrae el token de la respuesta y lo guarda en una variable de la colección",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.collectionVariables.set(\"authToken\", jsonData.key);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"testuser1\",\n    \"password\": \"P@ssword123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login",
+                                ""
+                            ]
+                        },
+                        "description": "Autentica a un usuario y devuelve un token de acceso. El token se guarda automáticamente para usarlo en otras peticiones."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-03: Cierre de sesión",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/logout/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout",
+                                ""
+                            ]
+                        },
+                        "description": "Invalida el token de sesión del usuario. Requiere autenticación."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-04: Solicitar reseteo de contraseña",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"testuser1@example.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/password/reset/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "password",
+                                "reset",
+                                ""
+                            ]
+                        },
+                        "description": "Inicia el flujo de reseteo de contraseña. Revisa la consola del servidor para obtener el uid y el token."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-04: Confirmar nueva contraseña",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"new_password1\": \"NuevaP@ssword456\",\n    \"new_password2\": \"NuevaP@ssword456\",\n    \"uid\": \"el_uid_del_correo\",\n    \"token\": \"el_token_del_correo\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/password/reset/confirm/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "password",
+                                "reset",
+                                "confirm",
+                                ""
+                            ]
+                        },
+                        "description": "Establece la nueva contraseña usando el `uid` y `token` del correo."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "2. Perfil de Usuario",
+            "item": [
+                {
+                    "name": "UC-06: Ver datos de usuario",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/user/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "user",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-06: Editar datos de usuario",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/user/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "user",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-07/08: Ver perfil extendido",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/profile/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "profile",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-07/08/21: Editar perfil extendido (Preferencias)",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"language_preference\": \"en\",\n    \"subscription_plan\": \"premium\",\n    \"preferred_translation_api\": \"google_translate\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/profile/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "profile",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "3. Carpetas",
+            "item": [
+                {
+                    "name": "UC-13: Listar carpetas",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/folders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "folders",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-13: Crear carpeta raíz",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Mi Carpeta Principal\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/folders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "folders",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-13: Crear subcarpeta",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Subcarpeta de Informes\",\n    \"parent\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/folders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "folders",
+                                ""
+                            ]
+                        },
+                        "description": "Asegúrate de que el `parent` ID exista."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-13: Eliminar carpeta",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/folders/1/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "folders",
+                                "1",
+                                ""
+                            ]
+                        },
+                        "description": "Cambia el ID por el de la carpeta que quieres eliminar."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "4. Documentos y Etiquetas",
+            "item": [
+                {
+                    "name": "UC-09: Subir Documento",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "folder",
+                                    "value": "1",
+                                    "type": "text",
+                                    "description": "ID opcional de la carpeta destino"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                ""
+                            ]
+                        },
+                        "description": "Sube un nuevo archivo. Debes seleccionar un archivo desde tu disco."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-15: Listar y Buscar Documentos",
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    },
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": []
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/?search=informe",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "informe",
+                                    "description": "Busca por nombre de archivo o etiqueta"
+                                },
+                                {
+                                    "key": "tags",
+                                    "value": "1",
+                                    "description": "Filtra por ID de etiqueta",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Lista todos los documentos del usuario (incluyendo los compartidos). Puedes usar los parámetros `search` o `tags` para filtrar."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-10: Descargar Documento",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/1/download/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                "1",
+                                "download",
+                                ""
+                            ]
+                        },
+                        "description": "Descarga el archivo físico. En Postman, usa 'Send and Download'."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-11: Eliminar Documento",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/1/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                "1",
+                                ""
+                            ]
+                        },
+                        "description": "Elimina un documento y su archivo físico."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-14: Crear Etiqueta",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Importante\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tags/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tags",
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-14: Aplicar Etiquetas a Documento",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"tags\": [1]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/1/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                "1",
+                                ""
+                            ]
+                        },
+                        "description": "Asocia una o más etiquetas (por ID) a un documento."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "5. Compartir",
+            "item": [
+                {
+                    "name": "UC-16: Compartir un Documento",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"user_id\": 2,\n    \"permission_level\": \"view\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/1/share/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                "1",
+                                "share",
+                                ""
+                            ]
+                        },
+                        "description": "Permite al propietario de un documento compartirlo con otro usuario. Asegúrate de que el `user_id` y el ID del documento existan."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "6. Traducción",
+            "item": [
+                {
+                    "name": "UC-19: Traducir fragmento de texto",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"text\": \"Hello, world!\",\n    \"target_language\": \"es\",\n    \"source_language\": \"en\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/1/translate-text/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                "1",
+                                "translate-text",
+                                ""
+                            ]
+                        },
+                        "description": "Traduce un fragmento de texto. El idioma de origen es opcional y se autodetectará si no se proporciona. Requiere que el documento exista para asociar la traducción al historial."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-17/18: Traducir documento completo",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"target_language\": \"fr\",\n    \"source_language\": \"es\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/documents/1/translate-document/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "documents",
+                                "1",
+                                "translate-document",
+                                ""
+                            ]
+                        },
+                        "description": "Traduce el contenido extraído del documento. El idioma de origen es opcional."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "UC-20: Ver historial de traducciones",
+                    "request": {
+                        "auth": {
+                            "type": "apikey",
+                            "apikey": [
+                                {
+                                    "key": "key",
+                                    "value": "Authorization",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "value",
+                                    "value": "Token {{authToken}}",
+                                    "type": "string"
+                                },
+                                {
+                                    "key": "in",
+                                    "value": "header",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/translation-history/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "translation-history",
+                                ""
+                            ]
+                        },
+                        "description": "Obtiene la lista de todas las traducciones realizadas por el usuario."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "authToken",
+            "value": "",
+            "type": "string",
+            "description": "Se rellena automáticamente al hacer login."
+        }
+    ]
+}

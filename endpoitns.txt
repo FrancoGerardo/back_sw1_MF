@@ -1,0 +1,230 @@
+### Flujo de Autenticación (Obtener y Usar Token)
+
+La mayoría de los endpoints requieren autenticación. El proceso es el siguiente:
+
+**Paso 1: Obtener el Token**
+
+Realiza una petición `POST` al endpoint de `login` (ver `UC-02`) con tu `username` y `password`. La respuesta te devolverá una `key`. Este es tu token de acceso.
+
+**Paso 2: Usar el Token**
+
+Para cada petición a un endpoint protegido (como `logout` o `user`), debes incluir una cabecera (Header) de autorización.
+
+- **Key**: `Authorization`
+- **Value**: `Token <tu_token_copiado>`
+
+Ejemplo: `Authorization: Token a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0`
+
+---
+### UC-01: Registro de nuevo usuario
+- **Método:** `POST`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/register/`
+- **Descripción:** Crea una nueva cuenta de usuario.
+- **Ejemplo (Body):**
+```json
+{
+    "username": "nuevo_usuario",
+    "email": "usuario@ejemplo.com",
+    "password": "una_contraseña_segura_123",
+    "password2": "una_contraseña_segura_123"
+}
+```
+
+---
+### UC-02: Inicio de sesión
+- **Método:** `POST`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/login/`
+- **Descripción:** Autentica a un usuario y devuelve un token de acceso.
+- **Ejemplo (Body):**
+```json
+{
+    "username": "nuevo_usuario",
+    "password": "una_contraseña_segura_123"
+}
+```
+
+---
+### UC-03: Cierre de sesión
+- **Método:** `POST`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/logout/`
+- **Descripción:** Invalida el token de sesión del usuario. Requiere autenticación.
+- **Ejemplo (Headers):**
+```
+Authorization: Token TU_TOKEN_DE_ACCESO
+```
+
+---
+### UC-06: Ver y Editar Perfil de Usuario
+- **Método:** `GET`, `PUT`, `PATCH`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/user/`
+- **Descripción:** Obtiene (`GET`) o actualiza (`PUT`/`PATCH`) los datos del usuario autenticado. Requiere autenticación.
+- **Ejemplo (Headers):**
+```
+Authorization: Token TU_TOKEN_DE_ACCESO
+```
+- **Ejemplo (Body para PUT/PATCH):**
+```json
+{
+    "first_name": "Nombre",
+    "last_name": "Apellido"
+}
+```
+
+---
+### UC-04: Recuperación de Contraseña
+
+**Paso 1: Solicitar reseteo**
+- **Método:** `POST`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/password/reset/`
+- **Descripción:** Inicia el flujo de reseteo de contraseña. El sistema enviará un correo (visible en consola) con un `uid` y un `token`.
+- **Ejemplo (Body):**
+```json
+{
+    "email": "usuario@ejemplo.com"
+}
+
+
+**Paso 2: Confirmar nueva contraseña**
+- **Método:** `POST`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/password/reset/confirm/`
+- **Descripción:** Establece la nueva contraseña usando el `uid` y `token` del correo.
+- **Ejemplo (Body):**
+```json
+{
+    "new_password1": "mi_nueva_contraseña_456",
+    "new_password2": "mi_nueva_contraseña_456",
+    "uid": "el_uid_del_correo",
+    "token": "el_token_del_correo"
+}
+
+
+
+### UC-05: Verificación de Correo Electrónico
+
+**Paso 1: Verificar correo (después del registro)**
+- **Método:** `GET`
+- **Endpoint:** URL dinámica.
+- **Descripción:** Después de registrarte, revisa la consola del servidor. Copia la URL completa de confirmación que se muestra en el correo simulado y haz una petición `GET` a esa URL.
+- **Ejemplo de URL en consola:**
+  `http://127.0.0.1:8000/api/auth/register/account-confirm-email/Mg:1v7.../`
+
+
+**Paso 2: Reenviar correo de verificación (opcional)**
+- **Método:** `POST`
+- **Endpoint:** `http://127.0.0.1:8000/api/auth/register/resend-email/`
+- **Descripción:** Reenvía el correo de verificación si el usuario no lo recibió o expiró.
+- **Ejemplo (Body):**
+```json
+{
+    "email": "usuario@ejemplo.com"
+}
+
+
+### UC-07 & UC-08: Gestionar Perfil Extendido
+- **Método:** `GET`, `PUT`, `PATCH`
+- **Endpoint:** `http://127.0.0.1:8000/api/profile/`
+- **Descripción:** Permite obtener (`GET`) o actualizar (`PUT`/`PATCH`) las preferencias de idioma y el plan de suscripción del usuario. Requiere autenticación.
+- **Nota sobre PUT vs PATCH**:
+  - Usa `PATCH` para actualizar solo uno de los campos (ej: solo `language_preference`).
+  - Usa `PUT` si vas a actualizar todos los campos del perfil a la vez.
+- **Ejemplo (Headers):**
+```
+Authorization: Token TU_TOKEN_DE_ACCESO
+```
+- **Ejemplo (Body para PUT/PATCH):**
+```json
+{
+    "language_preference": "en",
+    "subscription_plan": "premium"
+}
+
+
+
+### UC-13: Gestionar Carpetas
+- **Método:** `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
+- **Endpoints:**
+  - `GET, POST /api/folders/` (Listar todas las carpetas o crear una nueva)
+  - `GET, PUT, PATCH, DELETE /api/folders/{id}/` (Gestionar una carpeta específica)
+- **Descripción:** Permite la gestión completa de carpetas y subcarpetas. Requiere autenticación.
+- **Ejemplo (Crear carpeta raíz):** `POST /api/folders/`
+```json
+{ "name": "Mi Carpeta Principal" }
+```
+- **Ejemplo (Crear subcarpeta):** `POST /api/folders/`
+```json
+{ "name": "Subcarpeta", "parent": 1 }
+```
+
+
+### UC-09: Subir Documento
+- **Método:** `POST`
+- **Endpoint:** `/api/documents/`
+- **Descripción:** Sube un nuevo archivo. La petición debe ser de tipo `multipart/form-data`. Requiere autenticación.
+- **Ejemplo (Body - form-data):**
+  - `file`: (Seleccionar archivo desde el disco)
+  - `folder`: 1 (ID opcional de la carpeta destino)
+
+
+### UC-10: Descargar Documento
+- **Método:** `GET`
+- **Endpoint:** `/api/documents/{id}/download/`
+- **Descripción:** Descarga el archivo físico asociado a un documento. Requiere autenticación.
+- **Nota:** En Postman, usa la opción "Send and Download" para guardar el archivo.
+
+
+### UC-11: Eliminar Documento
+- **Método:** `DELETE`
+- **Endpoint:** `/api/documents/{id}/`
+- **Descripción:** Elimina un registro de documento y su archivo físico del servidor. Requiere autenticación.
+
+
+---
+### UC-14: Gestionar y Aplicar Etiquetas
+
+**Paso 1: Crear y listar etiquetas**
+- **Método:** `POST`, `GET`
+- **Endpoint:** `/api/tags/`
+- **Descripción:** Crea una nueva etiqueta (`POST`) o lista las existentes (`GET`).
+- **Ejemplo (Body para POST):**
+```json
+{ "name": "Importante" }
+```
+
+**Paso 2: Aplicar etiquetas a un documento**
+- **Método:** `PATCH`
+- **Endpoint:** `/api/documents/{id}/`
+- **Descripción:** Asocia una o más etiquetas a un documento.
+- **Ejemplo (Body):**
+```json
+{ "tags": [1, 2] }
+```
+
+---
+### UC-15: Buscar Documentos
+- **Método:** `GET`
+- **Endpoint:** `/api/documents/`
+- **Descripción:** Usa parámetros de consulta para buscar y filtrar documentos.
+- **Ejemplos de búsqueda:**
+  - Por nombre de archivo: `?search=informe`
+  - Por nombre de etiqueta: `?search=Importante`
+  - Por ID de etiqueta: `?tags=1`
+
+---
+### UC-16: Compartir un Documento
+
+**Paso 1: Compartir el documento**
+- **Método:** `POST`
+- **Endpoint:** `/api/documents/{id}/share/`
+- **Descripción:** Permite al propietario de un documento compartirlo con otro usuario, asignándole un nivel de permiso. Requiere autenticación del propietario.
+- **Ejemplo (Body):**
+```json
+{
+    "email": "testuser2@example.com",
+    "permission_level": "edit"
+}
+```
+
+**Paso 2: Verificar el acceso**
+- **Método:** `GET`
+- **Endpoint:** `/api/documents/`
+- **Descripción:** El usuario con `id=2` debe iniciar sesión. Al hacer una petición a este endpoint, ahora verá el documento que le fue compartido en su lista.
