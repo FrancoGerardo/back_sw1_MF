@@ -103,8 +103,9 @@ class CustomVerifyEmailView(VerifyEmailView):
     def get(self, request, key, *args, **kwargs):
         self.kwargs['key'] = key
         
-        frontend_url_success = 'http://localhost:5173/verify-email?success=true'
-        frontend_url_failure = 'http://localhost:5173/verify-email?success=false'
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+        frontend_url_success = f'{frontend_url}/verify-email?success=true'
+        frontend_url_failure = f'{frontend_url}/verify-email?success=false'
 
         try:
             confirmation = self.get_object()
